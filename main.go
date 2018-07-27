@@ -45,9 +45,15 @@ func dfs(filePath, prefix string) {
 	}
 
 	for _, v := range files {
-		if v.IsDir() {
-			dfs(filePath+"/"+v.Name(), prefix+"/"+v.Name())
-		} else {
+		switch v.IsDir() {
+		case true:
+			if prefix != "" {
+				dfs(filePath+"/"+v.Name(), prefix+"/"+v.Name())
+			} else {
+				dfs(filePath+"/"+v.Name(), v.Name())
+			}
+
+		default:
 			key := v.Name()
 			if prefix != "" {
 				key = prefix + "/" + key
