@@ -11,3 +11,5 @@
 "secret_key": 七牛账户的 sk
 "bucket": bucket 名称
 ```
+
+- 运行 `go run main.go`
