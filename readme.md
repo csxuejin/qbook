@@ -13,3 +13,4 @@
 ```
 
 - 运行 `go run main.go`
+- 以上步骤完成后，你就可以通过 bucket 的域名访问 gitbook 静态站点了
