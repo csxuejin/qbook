@@ -43,6 +43,8 @@ func main() {
 			}
 		}
 	}
+
+	return
 }
 
 func helper(filePath, prefix string, f os.FileInfo) {
