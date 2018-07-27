@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/csxuejin/kodo"
 )
@@ -15,39 +14,30 @@ type Config struct {
 }
 
 var (
+	config     *Config
 	kodoClient *kodo.Kodo
 )
 
-func main() {
-	config, err := initConfig()
+func init() {
+	data, err := ioutil.ReadFile("kodo.json")
 	if err != nil {
-		log.Fatalf("initConfig(): %v", err)
+		log.Panicf("ioutil.ReadFile(kodo.json): %v", err)
 		return
 	}
 
-	dirname := config.BookDir
-	files, err := ioutil.ReadDir(dirname)
+	err = json.Unmarshal(data, &config)
 	if err != nil {
-		log.Fatalf("ioutil.ReadDir(%v): %v", dirname, err)
-		return
+		log.Panicf("json.Unmarshal(): %v", err)
 	}
-
-	kodoClient = kodo.New(config.Kodo)
-	for _, v := range files {
-		if v.IsDir() {
-			helper(dirname+"/"+v.Name(), v.Name(), v)
-		} else {
-			err = kodoClient.PutFile(v.Name(), dirname+"/"+v.Name())
-			if err != nil {
-				log.Printf("upload failed: %v\n", dirname+"/"+v.Name())
-			}
-		}
-	}
-
 	return
 }
 
-func helper(filePath, prefix string, f os.FileInfo) {
+func main() {
+	kodoClient = kodo.New(config.Kodo)
+	dfs(config.BookDir, "")
+}
+
+func dfs(filePath, prefix string) {
 	files, err := ioutil.ReadDir(filePath)
 	if err != nil {
 		log.Fatalf("ioutil.ReadDir(%v): %v", filePath, err)
@@ -56,13 +46,11 @@ func helper(filePath, prefix string, f os.FileInfo) {
 
 	for _, v := range files {
 		if v.IsDir() {
-			helper(filePath+"/"+v.Name(), prefix+"/"+v.Name(), v)
+			dfs(filePath+"/"+v.Name(), prefix+"/"+v.Name())
 		} else {
-			var key string
-			if prefix == "" {
-				key = v.Name()
-			} else {
-				key = prefix + "/" + v.Name()
+			key := v.Name()
+			if prefix != "" {
+				key = prefix + "/" + key
 			}
 
 			err = kodoClient.PutFile(key, filePath+"/"+v.Name())
@@ -73,14 +61,4 @@ func helper(filePath, prefix string, f os.FileInfo) {
 			}
 		}
 	}
-}
-
-func initConfig() (config *Config, err error) {
-	data, err := ioutil.ReadFile("kodo.json")
-	if err != nil {
-		return
-	}
-
-	err = json.Unmarshal(data, &config)
-	return
 }
